@@ -1,0 +1,93 @@
+﻿@using Business
+@using Entities
+
+<p>
+    <a href="wherehouse/addproducts">Agregar Producto a Bodega</a>
+</p>
+<hr />
+
+<div class="form-group">
+    <label for="wherehouse">Filtrar por bodega: </label>
+    <select id="wherehouse" @onchange="WherehouseChanged" class="form-control">
+        <option value="">Seleccionar bodega ...</option>
+        @foreach (var wherehouse in wherehouses)
+        {
+            <option value="@wherehouse.WarehouseId">@wherehouse.WarehouseName</option>
+        }
+    </select>
+</div>
+<hr />
+<div class="h3 text-center">
+    @warehouseName
+</div>
+<hr />
+<div>
+    Total productos registradas: @storageTemp.Count
+</div>
+<hr />
+@if (storageTemp == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <table id="productsTable" class="display table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Referencia</th>
+                <th>Producto</th>
+                @*<th>Categoría</th>*@
+                <th>Bodega</th>
+                <th>Cantidad</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var storage in storageTemp)
+            {
+            <tr>
+                <td>@storage.ProductId</td>
+                <td>@storage.Product.ProductName</td>
+                @*<td>@storage.Category.CategoryName</td>*@
+                <td>@storage.PartialQuantity</td>
+                <td>@storage.Warehouse.WarehouseName</td>
+                <td>
+                    <a href="storage/update/@storage.StorageId">Editar</a>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<WarehouseEntity> wherehouses = new List<WarehouseEntity>();
+    private List<StorageEntity> storages = new List<StorageEntity>();
+    private List<StorageEntity> storageTemp = new List<StorageEntity>();
+
+    private string warehouseName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        wherehouses = B_Warehouse.WherehouseList();
+        storages = B_Storage.StorageList();
+
+        storageTemp = storages;        
+    }
+
+    private void WherehouseChanged(ChangeEventArgs e)
+    {
+        var warehouseId = e.Value.ToString();
+
+        if (string.IsNullOrEmpty(warehouseId))
+        {
+            storageTemp = storages;
+            warehouseName = "";
+        }
+        else
+        {
+            storageTemp = storages.Where(st => st.WarehouseId == warehouseId).ToList();
+            warehouseName = storageTemp.LastOrDefault().Warehouse.WarehouseName;
+        }
+    }
+}
